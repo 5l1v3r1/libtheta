@@ -1,16 +1,16 @@
 #define SKIP_NO_IMPORT
-#include "common.hpp"
 #include <iostream>
+#include "common.hpp"
 
 namespace libtheta {
 
-PyObjectRef moments_from_samples(const PyObjectRef &self, const PyObjectRef &args)
-{
+PyObjectRef moments_from_samples(const PyObjectRef &self,
+                                 const PyObjectRef &args) {
     PyArrayObject *weights_ = NULL;
     PyArrayObject *samples_ = NULL;
 
-    if(!PyArg_ParseTuple(args.borrow(), "O&O&", const_matrix_converter, &weights_,
-            const_matrix_converter, &samples_)) {
+    if (!PyArg_ParseTuple(args.borrow(), "O&O&", const_matrix_converter,
+                          &weights_, const_matrix_converter, &samples_)) {
         return nullptr;
     }
 
@@ -24,7 +24,7 @@ PyObjectRef moments_from_samples(const PyObjectRef &self, const PyObjectRef &arg
     Vector mean = Vector::Zero(dim);
     Matrix covar_ = Matrix::Zero(dim, dim);
     auto covar = covar_.selfadjointView<Lower>();
-    for(unsigned i = 0; i < num_samples; ++i) {
+    for (unsigned i = 0; i < num_samples; ++i) {
         const auto weight = weights[i];
         const auto sample = samples.col(i);
         mean += weight * sample;
@@ -41,32 +41,29 @@ PyObjectRef moments_from_samples(const PyObjectRef &self, const PyObjectRef &arg
 }
 
 PyMethodDef python_methods[] = {
-    { "moments_from_samples", pywrap<moments_from_samples>, METH_VARARGS, NULL },
-    { 0 }
-};
+    {"moments_from_samples", pywrap<moments_from_samples>, METH_VARARGS, NULL},
+    {0}};
 
 static struct PyModuleDef moduledef = {
-	PyModuleDef_HEAD_INIT,
-	"libtheta",          /* m_name */
-	"libtheta",          /* m_doc */
-	-1,                  /* m_size */
-	python_methods,      /* m_methods */
-	NULL,                /* m_reload */
-	NULL,                /* m_traverse */
-	NULL,                /* m_clear */
-	NULL,                /* m_free */
+    PyModuleDef_HEAD_INIT,
+    "libtheta",     /* m_name */
+    "libtheta",     /* m_doc */
+    -1,             /* m_size */
+    python_methods, /* m_methods */
+    NULL,           /* m_reload */
+    NULL,           /* m_traverse */
+    NULL,           /* m_clear */
+    NULL,           /* m_free */
 };
 
-extern "C"
-PyMODINIT_FUNC initlibtheta()
-{
+extern "C" PyMODINIT_FUNC initlibtheta() {
     using namespace libtheta;
     import_array();
-    #if PY_MAJOR_VERSION >= 3
-        auto mod = PyModule_Create(&moduledef);
-    #else    
-        auto mod = Py_InitModule3("libtheta", python_methods, "libtheta");
-    #endif
+#if PY_MAJOR_VERSION >= 3
+    auto mod = PyModule_Create(&moduledef);
+#else
+    auto mod = Py_InitModule3("libtheta", python_methods, "libtheta");
+#endif
 }
 
-} // namespace libtheta
+}  // namespace libtheta
